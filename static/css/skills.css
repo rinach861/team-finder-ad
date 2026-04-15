@@ -21,6 +21,7 @@
   padding:6px 12px; border:1px dashed #666; border-radius:16px;
   background:transparent; font-size:13px; cursor:pointer; color:#666;
 }
+.add-skill-btn.hidden { display:none; }
 
 .skill-input-wrapper { position:relative; margin-top:8px; }
 .skill-input-wrapper.hidden { display:none; }
