@@ -60,8 +60,8 @@ DJANGO_DEBUG=True
 POSTGRES_DB=team_finder
 POSTGRES_USER=team_finder
 POSTGRES_PASSWORD=team_finder
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5436
 TASK_VERSION=2
 ```
 
@@ -70,6 +70,9 @@ TASK_VERSION=2
 ```bash
 docker compose up -d
 ```
+
+Контейнер PostgreSQL опубликован на хост-порт `5436` (чтобы не конфликтовать с локально
+установленным PostgreSQL на `5432`).
 
 ### 5. Миграции и запуск сервера
 
