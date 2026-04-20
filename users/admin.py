@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.db.models import Count
 
 from .models import Skill, User
 
@@ -7,7 +8,15 @@ from .models import Skill, User
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     ordering = ("id",)
-    list_display = ("id", "email", "name", "surname", "is_staff", "is_active")
+    list_display = (
+        "id",
+        "email",
+        "name",
+        "surname",
+        "participated_projects_count",
+        "is_staff",
+        "is_active",
+    )
     list_filter = ("is_staff", "is_active")
     search_fields = ("email", "name", "surname", "phone")
     readonly_fields = ("date_joined",)
@@ -30,6 +39,14 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(_participated_projects_count=Count("participated_projects", distinct=True))
+
+    @admin.display(description="Проектов (участник)", ordering="_participated_projects_count")
+    def participated_projects_count(self, obj):
+        return obj._participated_projects_count
 
 
 @admin.register(Skill)

@@ -1,16 +1,18 @@
 import json
+from http import HTTPStatus
 
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
-from django.core.paginator import Paginator
+from django.contrib.auth.forms import PasswordChangeForm
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from .constants import PARTICIPANTS_PER_PAGE, SKILLS_AUTOCOMPLETE_LIMIT
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import Skill
+from .services import paginate_queryset
 
 User = get_user_model()
 
@@ -20,7 +22,7 @@ def register_view(request):
         return redirect("projects:list")
 
     form = RegistrationForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
+    if form.is_bound and form.is_valid():
         form.save()
         return redirect("users:login")
 
@@ -32,7 +34,7 @@ def login_view(request):
         return redirect("projects:list")
 
     form = LoginForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
+    if form.is_bound and form.is_valid():
         email = form.cleaned_data["email"].strip().lower()
         password = form.cleaned_data["password"]
         user = authenticate(request, email=email, password=password)
@@ -61,7 +63,7 @@ def user_detail_view(request, user_id):
 @login_required
 def edit_profile_view(request):
     form = ProfileForm(request.POST or None, request.FILES or None, instance=request.user)
-    if request.method == "POST" and form.is_valid():
+    if form.is_bound and form.is_valid():
         form.save()
         return redirect("users:detail", user_id=request.user.id)
 
@@ -71,7 +73,7 @@ def edit_profile_view(request):
 @login_required
 def change_password_view(request):
     form = PasswordChangeForm(request.user, request.POST or None)
-    if request.method == "POST" and form.is_valid():
+    if form.is_bound and form.is_valid():
         user = form.save()
         update_session_auth_hash(request, user)
         return redirect("users:detail", user_id=request.user.id)
@@ -87,8 +89,11 @@ def participants_list_view(request):
     if active_skill:
         participants = participants.filter(skills__name__iexact=active_skill).distinct()
 
-    paginator = Paginator(participants, 12)
-    page_obj = paginator.get_page(request.GET.get("page"))
+    page_obj = paginate_queryset(
+        participants,
+        request.GET.get("page"),
+        per_page=PARTICIPANTS_PER_PAGE,
+    )
     context = {
         "participants": page_obj.object_list,
         "page_obj": page_obj,
@@ -105,7 +110,7 @@ def skills_autocomplete_view(request):
         return JsonResponse([], safe=False)
 
     skills = Skill.objects.filter(name__istartswith=query).order_by("name").values("id", "name")[
-        :10
+        :SKILLS_AUTOCOMPLETE_LIMIT
     ]
     return JsonResponse(list(skills), safe=False)
 
@@ -139,7 +144,10 @@ def add_skill_view(request, user_id):
             skill = Skill.objects.create(name=skill_name)
             created = True
     else:
-        return JsonResponse({"status": "error", "detail": "Передайте skill_id или name."}, status=400)
+        return JsonResponse(
+            {"status": "error", "detail": "Передайте skill_id или name."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
 
     added = not target_user.skills.filter(pk=skill.pk).exists()
     if added:
