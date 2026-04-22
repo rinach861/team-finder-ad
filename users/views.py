@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from .constants import PARTICIPANTS_PER_PAGE, SKILLS_AUTOCOMPLETE_LIMIT
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import Skill
-from .services import paginate_queryset
+from projects.services import paginate_queryset
 
 User = get_user_model()
 
@@ -91,7 +91,7 @@ def participants_list_view(request):
 
     page_obj = paginate_queryset(
         participants,
-        request.GET.get("page"),
+        request,
         per_page=PARTICIPANTS_PER_PAGE,
     )
     context = {

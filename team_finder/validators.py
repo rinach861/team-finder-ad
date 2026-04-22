@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 
 from django.core.exceptions import ValidationError
 
+from .constants import GITHUB_HOST
+
 PHONE_PATTERN = re.compile(r"^(\+7|8)\d{10}$")
 
 
@@ -33,7 +35,7 @@ def validate_github_url(raw_url: str) -> str:
     if netloc.startswith("www."):
         netloc = netloc[4:]
 
-    if netloc != "github.com":
-        raise ValidationError("Ссылка должна вести на github.com.")
+    if netloc != GITHUB_HOST:
+        raise ValidationError(f"Ссылка должна вести на {GITHUB_HOST}.")
 
     return raw_url

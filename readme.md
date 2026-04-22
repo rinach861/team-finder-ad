@@ -139,3 +139,5 @@ docker compose down
 ## Автор
 
 - Меджидов Ринат
+
+- GitHub: [rinach861](https://github.com/rinach861)

@@ -16,7 +16,7 @@ from .services import (
 
 def project_list_view(request):
     projects = get_projects_queryset().order_by("-created_at")
-    page_obj = paginate_queryset(projects, request.GET.get("page"))
+    page_obj = paginate_queryset(projects, request)
     context = {
         "projects": page_obj.object_list,
         "page_obj": page_obj,

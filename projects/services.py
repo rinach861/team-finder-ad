@@ -9,8 +9,9 @@ def get_projects_queryset():
     return Project.objects.select_related("owner").prefetch_related("participants")
 
 
-def paginate_queryset(queryset, page_number, per_page=PROJECTS_PER_PAGE):
+def paginate_queryset(queryset, request, per_page=PROJECTS_PER_PAGE):
     paginator = Paginator(queryset, per_page)
+    page_number = request.GET.get("page")
     return paginator.get_page(page_number)
 
 
